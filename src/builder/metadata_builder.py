@@ -25,7 +25,7 @@ def get_db_metadata(config):
         )
         cursor = connection.cursor()
         
-        # Fetch table metadata
+        # Fetch table names
         cursor.execute("""
             SELECT table_name
             FROM information_schema.tables
@@ -37,21 +37,13 @@ def get_db_metadata(config):
         
         for (table_name,) in tables:
             cursor.execute(f"""
-                SELECT column_name, data_type, is_nullable, column_default
+                SELECT column_name
                 FROM information_schema.columns
                 WHERE table_name = '{table_name}';
             """)
-            columns = cursor.fetchall()
+            columns = [col[0] for col in cursor.fetchall()]
             
-            db_metadata[table_name] = [
-                {
-                    "column_name": col[0],
-                    "data_type": col[1],
-                    "is_nullable": col[2],
-                    "default": col[3]
-                }
-                for col in columns
-            ]
+            db_metadata[table_name] = columns
         
         return db_metadata
     except Exception as e:
@@ -69,9 +61,12 @@ def build():
     conf_path = os.path.join(os.path.dirname(__file__), "..","..","conf", "database.conf")
     config = read_config(conf_path)
     metadata = get_db_metadata(config)
-    metadata_path = os.path.join(os.path.dirname(__file__), "..","..","metadata", "metadata_db.json")
-    if metadata:
-        save_to_json(metadata, metadata_path)
-        print("Database metadata saved to metadata_db.json")
-    else:
-        print("Failed to retrieve database metadata")
+    metadata_path = os.path.join(os.path.dirname(__file__), "..","..","metadata", "metadata.json")
+    if not os.path.exists(metadata_path):
+        if metadata:
+            save_to_json(metadata, metadata_path)
+            print("Database metadata saved to metadata_db.json")
+        else:
+            print("Failed to retrieve database metadata")
+    else :
+        print("Metadata already exists")

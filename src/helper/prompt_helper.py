@@ -25,15 +25,22 @@ def prepare_prompt(message: str) -> str:
     print(metadata_str)
     # Construct the prompt
     prompt = f"""
+    ### SYSTEM MESSAGE :
     You are a GIS expert with access to the following geospatial datasets. 
     Use only the provided metadata to answer questions related to available layers, their types, and paths.
+    Provided Metadata is Schema of SQL Database
     Metadata:
     {metadata_str}
 
 
-    **Query:**
+    ### **User Query:**
     {message}
-    
+
+    ### **Final Response Rules:**
+    - Ensure **all** required steps have been completed before returning the final answer.
+    - The final answer should be only SQL Query statement
+
+    ### **Response (ONLY use the metadata, no assumptions, no extra details):**
     """
     return prompt
 
