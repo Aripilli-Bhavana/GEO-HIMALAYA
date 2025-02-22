@@ -1,0 +1,5 @@
+models/
+metadata/
+venv/
+conf/
+__pycache__/

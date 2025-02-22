@@ -1,0 +1,7 @@
+Dockerfile
+.git
+__pycache__/
+.env
+.vscode/
+*.pyc
+*.pyo
