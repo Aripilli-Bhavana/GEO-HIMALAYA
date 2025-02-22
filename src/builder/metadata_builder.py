@@ -60,9 +60,11 @@ def save_to_json(data, file_path):
 def build():
     conf_path = os.path.join(os.path.dirname(__file__), "..","..","conf", "database.conf")
     config = read_config(conf_path)
-    metadata = get_db_metadata(config)
+   
     metadata_path = os.path.join(os.path.dirname(__file__), "..","..","metadata", "metadata.json")
     if not os.path.exists(metadata_path):
+        print(f"Metadata doesn't exists at : {metadata_path}")
+        metadata = get_db_metadata(config)
         if metadata:
             save_to_json(metadata, metadata_path)
             print("Database metadata saved to metadata_db.json")
