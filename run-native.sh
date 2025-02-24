@@ -2,11 +2,9 @@
 
 # Set application and model details
 APP_NAME="llm-app"
-MODEL_DIR="models"
-MODEL_FILE="mistral-7b-instruct-v0.2.Q5_K_M.gguf"
-MODEL_URL="https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.2-GGUF/resolve/main/$MODEL_FILE"
 VENV_DIR="venv"
 MAIN_SCRIPT="src/main.py"
+OLLAMA_MODEL="mistral"
 
 # Check if Python is installed
 if ! command -v python3 &>/dev/null; then
@@ -20,22 +18,33 @@ if ! command -v pip &>/dev/null; then
     exit 1
 fi
 
-# Create models directory if not exists
-if [ ! -d "$MODEL_DIR" ]; then
-    echo "📁 Creating models directory..."
-    mkdir -p "$MODEL_DIR"
-fi
-
-# Download the model if it does not exist
-if [ ! -f "$MODEL_DIR/$MODEL_FILE" ]; then
-    echo "⬇️ Downloading model: $MODEL_FILE..."
-    wget -O "$MODEL_DIR/$MODEL_FILE" "$MODEL_URL"
+# Check if Ollama is installed, install if missing
+if ! command -v ollama &>/dev/null; then
+    echo "⬇️ Installing Ollama..."
+    curl -fsSL https://ollama.com/install.sh | sh
     if [ $? -ne 0 ]; then
-        echo "❌ Error: Failed to download model."
+        echo "❌ Error: Failed to install Ollama."
         exit 1
     fi
 else
-    echo "✅ Model already exists. Skipping download."
+    echo "✅ Ollama is already installed."
+fi
+
+# Start Ollama daemon if not running
+if ! pgrep -x "ollama" > /dev/null; then
+    echo "🔄 Starting Ollama daemon..."
+    ollama serve & disown
+    sleep 3  # Wait for Ollama to start
+else
+    echo "✅ Ollama is already running."
+fi
+
+# Pull the required model if not available
+if ! ollama list | grep -q "$OLLAMA_MODEL"; then
+    echo "⬇️ Downloading Ollama model: $OLLAMA_MODEL..."
+    ollama pull "$OLLAMA_MODEL"
+else
+    echo "✅ Model '$OLLAMA_MODEL' is already available."
 fi
 
 # Create and activate virtual environment if not exists

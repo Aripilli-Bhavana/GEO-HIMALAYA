@@ -1,20 +1,31 @@
-import os
-from llama_cpp import Llama
+import ollama
 
-# Define model path
-MODEL_PATH = os.path.expanduser("models/mistral-7b-instruct-v0.2.Q5_K_M.gguf")
+# Define the model name (same as what you pulled via Ollama)
+MODEL_NAME = "mistral"  # Change to "llama3", "gemma", etc.
 
-# Load the model
-llm = Llama(
-    model_path=MODEL_PATH, 
-    n_ctx=4096, 
-    temperature=0.0,  # Make it deterministic
-    top_p=0.7,  # Reduce randomness
-    repeat_penalty=1.5,  # Strong penalty for repetition
-    verbose=True
-)
-
-# Function to process queries
+# Function to generate a response
 def generate_response(prompt: str) -> str:
-    response = llm(prompt, max_tokens=256)
-    return response["choices"][0]["text"]
+    response = ollama.generate(
+        model=MODEL_NAME,
+        prompt=prompt,
+        options={
+            "num_ctx": 4096,  # Context length
+            "temperature": 0.0,  # Deterministic response
+            "top_p": 0.7,  # Reduce randomness
+            "repeat_penalty": 1.5,  # Prevent repetition
+            "num_predict": 256,  # Max tokens to generate
+        }
+    )
+    return response["response"]
+
+if __name__ == "__main__":
+    print("Ollama Chatbot (Type 'exit' to quit)")
+    while True:
+        user_input = input("You: ")
+        if user_input.lower() in ["exit", "quit"]:
+            print("Exiting chat...")
+            break
+        
+        response = generate_response(user_input)
+        print(f"Bot: {response}")
+
