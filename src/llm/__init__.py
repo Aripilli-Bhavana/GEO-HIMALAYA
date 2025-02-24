@@ -1,19 +1,22 @@
 import ollama
+import os
 
-# Define the model name (same as what you pulled via Ollama)
-MODEL_NAME = "mistral"  # Change to "llama3", "gemma", etc.
+# Ensure the environment variable is set
+os.environ["OLLAMA_HOST"] = "http://localhost:11434"
 
-# Function to generate a response
+# Define the model name
+MODEL_NAME = "mistral"
+
 def generate_response(prompt: str) -> str:
     response = ollama.generate(
         model=MODEL_NAME,
         prompt=prompt,
         options={
-            "num_ctx": 4096,  # Context length
-            "temperature": 0.0,  # Deterministic response
-            "top_p": 0.7,  # Reduce randomness
-            "repeat_penalty": 1.5,  # Prevent repetition
-            "num_predict": 256,  # Max tokens to generate
+            "num_ctx": 4096,
+            "temperature": 0.0,
+            "top_p": 0.7,
+            "repeat_penalty": 1.5,
+            "num_predict": 256,
         }
     )
     return response["response"]

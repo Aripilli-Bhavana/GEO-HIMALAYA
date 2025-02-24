@@ -55,14 +55,26 @@ if (-not (Get-Command ollama -ErrorAction SilentlyContinue)) {
     Write-Host "✅ Ollama is already installed."
 }
 
-# Check if Ollama model is available, download if missing
-$ollamaModels = ollama list
-if ($ollamaModels -notmatch "\b$OLLAMA_MODEL\b") {
+# Get the list of installed models, ignoring headers and extracting only model names
+$ollamaModels = ollama list | Select-Object -Skip 1 | ForEach-Object { ($_ -split "\s+")[0].Trim() }
+Write-Host "⬇️ Available Models: $ollamaModels"
+
+
+# Debugging: Show normalized model name
+Write-Host "Checking for model: $OLLAMA_MODEL"
+
+# Check if the required model is in the list
+if ($ollamaModels -match "^$OLLAMA_MODEL(:latest)?$"){
+    Write-Host "✅ Model '$OLLAMA_MODEL' is already available."
+} else {
     Write-Host "⬇️ Downloading Ollama model: $OLLAMA_MODEL..."
     ollama pull "$OLLAMA_MODEL"
-} else {
-    Write-Host "✅ Model '$OLLAMA_MODEL' is already available."
 }
+
+#Start Model using Ollama
+# Write-Host "🚀 Starting Ollama model: $OLLAMA_MODEL..."
+# Start-Process -NoNewWindow -FilePath "ollama" -ArgumentList "serve"
+
 
 # Create and activate virtual environment if not exists
 if (-not (Test-Path $VENV_DIR)) {
