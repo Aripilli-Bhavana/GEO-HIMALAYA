@@ -61,14 +61,23 @@ def build():
     conf_path = os.path.join(os.path.dirname(__file__), "..","..","conf", "database.conf")
     config = read_config(conf_path)
    
-    metadata_path = os.path.join(os.path.dirname(__file__), "..","..","metadata", "metadata.json")
+    metadata_dir = os.path.join(os.path.dirname(__file__), "..", "..", "metadata")
+    metadata_path = os.path.join(metadata_dir, "metadata.json")
+
+    # Ensure the metadata directory exists
+    if not os.path.exists(metadata_dir):
+        print(f"Creating metadata directory at: {metadata_dir}")
+        os.makedirs(metadata_dir, exist_ok=True)
+
     if not os.path.exists(metadata_path):
-        print(f"Metadata doesn't exists at : {metadata_path}")
+        print(f"Metadata file not found, generating at: {metadata_path}")
         metadata = get_db_metadata(config)
         if metadata:
             save_to_json(metadata, metadata_path)
-            print("Database metadata saved to metadata_db.json")
+            print("Database metadata saved successfully.")
         else:
-            print("Failed to retrieve database metadata")
-    else :
-        print("Metadata already exists")
+            print("Failed to retrieve database metadata.")
+    else:
+        print("Metadata file already exists.")
+
+
