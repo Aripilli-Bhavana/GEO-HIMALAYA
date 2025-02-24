@@ -6,6 +6,8 @@ VENV_DIR="venv"
 MAIN_SCRIPT="src/main.py"
 OLLAMA_MODEL="mistral"
 
+sudo apt update && sudo apt install -y libpq-dev python3-dev build-essential
+
 # Check if Python is installed
 if ! command -v python3 &>/dev/null; then
     echo "❌ Error: Python3 is not installed. Please install it first."
