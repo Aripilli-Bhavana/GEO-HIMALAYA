@@ -55,6 +55,14 @@ if (-not (Get-Command ollama -ErrorAction SilentlyContinue)) {
     Write-Host "✅ Ollama is already installed."
 }
 
+# Check if Ollama model is available, download if missing
+$ollamaModels = ollama list
+if ($ollamaModels -notmatch "\b$OLLAMA_MODEL\b") {
+    Write-Host "⬇️ Downloading Ollama model: $OLLAMA_MODEL..."
+    ollama pull "$OLLAMA_MODEL"
+} else {
+    Write-Host "✅ Model '$OLLAMA_MODEL' is already available."
+}
 
 # Create and activate virtual environment if not exists
 if (-not (Test-Path $VENV_DIR)) {
