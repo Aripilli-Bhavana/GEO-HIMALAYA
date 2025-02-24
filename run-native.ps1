@@ -1,10 +1,8 @@
 # Set application and model details
 $APP_NAME = "llm-app"
-$MODEL_DIR = "models"
-$MODEL_FILE = "mistral-7b-instruct-v0.2.Q5_K_M.gguf"
-$MODEL_URL = "https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.2-GGUF/resolve/main/$MODEL_FILE"
 $VENV_DIR = "venv"
 $MAIN_SCRIPT = "src/main.py"
+$OLLAMA_MODEL = "mistral"
 
 # Function to download model with retries
 function Download-Model {
@@ -43,18 +41,20 @@ if (-not (Get-Command pip -ErrorAction SilentlyContinue)) {
     exit 1
 }
 
-# Create models directory if not exists
-if (-not (Test-Path $MODEL_DIR)) {
-    Write-Host "Creating models directory..."
-    New-Item -ItemType Directory -Path $MODEL_DIR | Out-Null
+# Check if Ollama is installed, install if missing
+if (-not (Get-Command ollama -ErrorAction SilentlyContinue)) {
+    Write-Host "⬇️ Installing Ollama..."
+    $installerPath = "$env:TEMP\ollama.msi"
+    Invoke-WebRequest -Uri "https://ollama.com/download/Ollama.msi" -OutFile $installerPath
+    Start-Process -FilePath "msiexec.exe" -ArgumentList "/i $installerPath /quiet /norestart" -Wait
+    if (-not (Get-Command ollama -ErrorAction SilentlyContinue)) {
+        Write-Host "❌ Error: Failed to install Ollama."
+        exit 1
+    }
+} else {
+    Write-Host "✅ Ollama is already installed."
 }
 
-# Download the model if it does not exist
-if (-not (Test-Path "$MODEL_DIR\$MODEL_FILE")) {
-    Download-Model -url $MODEL_URL -output "$MODEL_DIR\$MODEL_FILE"
-} else {
-    Write-Host "Model already exists. Skipping download."
-}
 
 # Create and activate virtual environment if not exists
 if (-not (Test-Path $VENV_DIR)) {
