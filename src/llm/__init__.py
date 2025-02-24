@@ -28,4 +28,3 @@ if __name__ == "__main__":
         
         response = generate_response(user_input)
         print(f"Bot: {response}")
-
