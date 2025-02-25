@@ -26,11 +26,12 @@ def prepare_prompt(message: str) -> str:
     # Construct the prompt
     prompt = f"""
     ### SYSTEM MESSAGE :
-    You are a GIS expert with access to the following geospatial datasets. 
-    Use only the provided metadata to answer questions related to available layers, their types, and paths.
-    Provided Metadata is Schema of SQL Database
-    Metadata:
+    You are a GIS expert with access to geospatial database with following tables. 
+    **Database details :**
     {metadata_str}
+
+    Use only the provided database details to answer questions related to available data.
+    
 
 
     ### **User Query:**

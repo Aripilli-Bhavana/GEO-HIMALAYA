@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from llm import generate_response  # Import the function
+from llm import generate_responses  # Import the function
 from helper import prompt_helper
 
 main = Blueprint("main", __name__)
@@ -11,6 +11,6 @@ def process_request():
         return jsonify({"error": "Missing 'message' in request"}), 400
 
     prompt = prompt_helper.prepare_prompt(data["message"])
-    response = generate_response(prompt)
+    response = generate_responses(prompt)
     
     return jsonify({"response": response})
