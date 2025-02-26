@@ -40,7 +40,7 @@ def prepare_prompt(message: str) -> str:
 
     ### **Final Response Rules:**
     - Ensure **all** required steps have been completed before returning the final answer.
-    - The final answer should be only SQL Query statement
+    - The final answer must use this format <Query : <SQL Qeury>><Reasoning : <Explnattion> 
 
     ### **Response (ONLY use the metadata, no assumptions, no extra details):**
     """
