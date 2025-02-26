@@ -14,7 +14,7 @@ def generate_responses(prompt: str, num_responses: int = 2):
             model=MODEL_NAME,
             prompt=prompt,
             options={
-                "num_ctx": 8192,
+                "num_ctx": 10240,
                 "temperature": 0.0,  # Higher temperature for varied responses
                 "top_p": 0.9,
                 "repeat_penalty": 1.2,
