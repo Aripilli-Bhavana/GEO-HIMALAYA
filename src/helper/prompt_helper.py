@@ -25,25 +25,31 @@ def prepare_prompt(message: str) -> str:
     print(metadata_str)
     # Construct the prompt
     prompt = f"""
-    ### SYSTEM MESSAGE :
-    You are a GIS expert with access to geospatial database with following tables. 
-    **Database details :**
-    {metadata_str}
-    
-    Database deatails has database name , column names with its description.
-    Use only the provided database details to answer questions related to available data.
-    
+    ### SYSTEM MESSAGE:
+      You are a GIS expert with access to a geospatial database that contains the following tables.
 
+          **Database details:**
+          {metadata_str}
 
-    ### **User Query:**
-    {message}
+          The database details include the database name, column names, and their descriptions.
+          Use only the provided database details to answer questions related to available data.
+          You **must not** assume anything beyond the provided metadata.
 
-    ### **Final Response Rules:**
-    - Ensure **all** required steps have been completed before returning the final answer.
-    - The final answer must use this format <Query : <SQL Qeury>><Reasoning : <Explnattion> 
+          ---
 
-    ### **Response (ONLY use the metadata, no assumptions, no extra details):**
-    """
+          ### **User Query:**
+          {message}
+
+          ---
+
+          ### **Final Response Rules:**
+         - Ensure **all** required steps have been completed before returning the final answer.
+         - The final answer **must strictly** use this format:
+           <Query: SQL_QUERY> <Reasoning: EXPLANATION>
+         ---
+
+         ### **Response:**
+         """    
     return prompt
 
 
