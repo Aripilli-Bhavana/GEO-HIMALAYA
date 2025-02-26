@@ -26,7 +26,7 @@ def prepare_prompt(message: str) -> str:
     # Construct the prompt
     prompt = f"""
     ### SYSTEM MESSAGE:
-      You are a GIS expert with access to a geospatial database that contains the following tables.
+      You are a POSTGIS expert with access to a geospatial database that contains the following tables.
 
           **Database details:**
           {metadata_str}
@@ -45,6 +45,7 @@ def prepare_prompt(message: str) -> str:
           ### **Final Response Rules:**
          - Ensure **all** required steps have been completed before returning the final answer.
          - The final answer **must strictly** use this format:
+         - **Donot reutrn think in your response.**
            <Query: SQL_QUERY> <Reasoning: EXPLANATION>
          ---
 
