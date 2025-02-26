@@ -5,7 +5,7 @@ import os
 os.environ["OLLAMA_HOST"] = "http://localhost:11434"
 
 # Define the model name
-MODEL_NAME = "deepseek-r1-14b"
+MODEL_NAME = "deepseek-r1:14b"
 
 def generate_responses(prompt: str, num_responses: int = 2):
     responses = []

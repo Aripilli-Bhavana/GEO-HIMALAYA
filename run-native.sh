@@ -4,7 +4,7 @@
 APP_NAME="llm-app"
 VENV_DIR="venv"
 MAIN_SCRIPT="src/main.py"
-OLLAMA_MODEL="deepseek-r1-14b"
+OLLAMA_MODEL="deepseek-r1:14b"
 
 sudo apt update && sudo apt install -y libpq-dev python3-dev build-essential
 
