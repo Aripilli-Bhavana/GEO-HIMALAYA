@@ -22,7 +22,6 @@ def prepare_prompt(message: str) -> str:
 
     # Format metadata into a readable context
     metadata_str = json.dumps(metadata, indent=2)
-    print(metadata_str)
     # Construct the prompt
     prompt = f"""
     ### SYSTEM MESSAGE:
@@ -45,7 +44,6 @@ def prepare_prompt(message: str) -> str:
           ### **Final Response Rules:**
          - Ensure **all** required steps have been completed before returning the final answer.
          - The final answer **must strictly** use this format:
-         - **Donot reutrn think in your response.**
            <Query: SQL_QUERY> <Reasoning: EXPLANATION>
          ---
 
