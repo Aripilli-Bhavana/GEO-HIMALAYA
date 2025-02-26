@@ -29,7 +29,8 @@ def prepare_prompt(message: str) -> str:
     You are a GIS expert with access to geospatial database with following tables. 
     **Database details :**
     {metadata_str}
-
+    
+    Database deatails has database name , column names with its description.
     Use only the provided database details to answer questions related to available data.
     
 

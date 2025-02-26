@@ -41,6 +41,7 @@ def get_db_metadata(config):
                 ) AS columns
             FROM information_schema.columns c
             WHERE c.table_schema = 'public'
+	    AND c.table_name IN ('uttarakhand_drainage', 'uttarakhand_forest','uttarakhand_soil','uttarakhand_roads','lulc_uttarakhand_2015')
             GROUP BY c.table_name, c.table_schema
         )
         SELECT jsonb_object_agg(
