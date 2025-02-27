@@ -2,7 +2,7 @@ import ollama
 import re
 from flask import Response
 
-MODEL_NAME = "mistral"
+MODEL_NAME = "sqlcoder:15b"
 
 def extract_query_tag(response: str) -> str:
     """
