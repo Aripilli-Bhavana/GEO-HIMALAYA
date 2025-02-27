@@ -1,5 +1,5 @@
 flask==3.0.0
 psycopg2==2.9.9
 ollama
-langchain==0.3.4
+langchain
 langchain_community
