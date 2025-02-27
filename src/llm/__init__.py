@@ -2,7 +2,7 @@ import ollama
 import re
 from flask import Response
 
-MODEL_NAME = "deepseek-r1:14b"
+MODEL_NAME = "mistral"
 
 def extract_query_tag(response: str) -> str:
     """
