@@ -4,7 +4,7 @@ import json
 import os
 from langchain.prompts import PromptTemplate
 
-def get_prompt_template(message: str) -> str:
+def get_prompt_template()-> PromptTemplate:
     """
     Reutrns pronpmt template
     """
