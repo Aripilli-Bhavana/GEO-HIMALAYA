@@ -67,8 +67,7 @@ def get_prompt_template()-> PromptTemplate:
         ---
 
         ### **Expected Response Format:**
-        <Query: SQL_QUERY>
-        <Reasoning: Explanation of how the query is generated>
+        -- SQL Query only
 
         ---
 
