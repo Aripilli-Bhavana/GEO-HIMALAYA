@@ -1,8 +1,9 @@
-import ollama
 import re
-from flask import Response
+from langchain.llms import Ollama
+from langchain.chains import LLMChain
+from helper import prompt_helper
 
-MODEL_NAME = "mistral:15b"
+MODEL_NAME = "mistral"
 
 def extract_query_tag(response: str) -> str:
     """
@@ -11,20 +12,10 @@ def extract_query_tag(response: str) -> str:
     match = re.search(r"<Query:\s*(.*?)\s*>", response, re.DOTALL)
     return match.group(1) if match else "No <Query> tag found in the response."
 
-def generate_responses(prompt: str, num_responses: int = 2):
-    responses = []
-    for _ in range(num_responses):
-        response = ollama.generate(
-            model=MODEL_NAME,
-            prompt=prompt,
-            options={
-                "num_ctx": 4096,
-                "temperature": 0.0,  # Higher temperature for varied responses
-                "top_p": 0.9,
-                "repeat_penalty": 1.2,
-                "num_predict": 256,
-            }
-        )
-        responses.append(response["response"])
-    return responses
+def generate_responses(user_query: str, num_responses: int = 2):
+    llm = Ollama(model=MODEL_NAME)
+    query_chain = LLMChain(llm=llm, prompt=prompt_helper.get_prompt_template())
+    response = query_chain.run(user_query=user_query, metadata=prompt_helper.get_metadata())
+    sql_query = extract_query_tag(response)
+    return sql_query
 

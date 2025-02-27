@@ -13,6 +13,6 @@ def process_request():
     if not data or "message" not in data:
         return jsonify({"error": "Missing 'message' in request"}), 400
 
-    prompt = prompt_helper.prepare_prompt(data["message"])
+    prompt = prompt_helper.get_prompt_template(data["message"])
     
     return generate_responses(prompt)  # Return streamed response
