@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify, Response
-from llm import generate_responses_stream  # New function for streaming
+from llm import generate_responses  # New function for streaming
 from helper import prompt_helper
 
 main = Blueprint("main", __name__)
@@ -15,4 +15,4 @@ def process_request():
 
     prompt = prompt_helper.prepare_prompt(data["message"])
     
-    return generate_responses_stream(prompt)  # Return streamed response
+    return generate_responses(prompt)  # Return streamed response
