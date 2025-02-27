@@ -1,5 +1,5 @@
 import re
-from langchain.llms import Ollama
+from langchain_community.llms import Ollama
 from langchain.chains import LLMChain
 from helper import prompt_helper
 
