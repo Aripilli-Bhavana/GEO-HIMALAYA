@@ -3,3 +3,4 @@ metadata/
 venv/
 conf/
 __pycache__/
+logs/

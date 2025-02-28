@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify, Response
 from llm import generate_responses  # New function for streaming
-from helper import response_helper
+from helper import response_helper, logger
 
 main = Blueprint("main", __name__)
 
@@ -15,6 +15,7 @@ def process_request():
     if not data or "aoi" not in data:
         return jsonify({"error": "Missing 'aoi' in request"}), 400
     
+    logger.log("INFO", f"User Query : {data["message"]}")
     
     llm_response = generate_responses(data["message"]) 
     response = response_helper.get_result_from_db(llm_response, data["aoi"])

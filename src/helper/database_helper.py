@@ -5,6 +5,7 @@ import json
 import os
 from shapely.wkb import loads
 import geojson
+from helper import logger
 
 def read_config(file_path):
     config = {}
@@ -70,7 +71,7 @@ def run_query(response_from_llm: str, aoi: str):
         return True, feature_collection
 
     except Exception as e:
-        print(f"Error: {e}")
+        logger.log("ERROR", str(e))
         return False, str(e)
 
     finally:

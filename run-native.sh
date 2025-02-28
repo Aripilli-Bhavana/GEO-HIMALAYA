@@ -5,6 +5,8 @@ APP_NAME="llm-app"
 VENV_DIR="venv"
 MAIN_SCRIPT="src/main.py"
 OLLAMA_MODEL="mistral"
+LOG_DIR="logs"
+LOG_FILE="$LOG_DIR/server.log"
 
 sudo apt update && sudo apt install -y libpq-dev python3-dev build-essential
 
@@ -49,6 +51,19 @@ else
     echo "✅ Model '$OLLAMA_MODEL' is already available."
 fi
 
+
+
+# Check if directory exists, if not, create it
+if [ ! -d "$LOG_DIR" ]; then
+    mkdir "$LOG_DIR"
+    echo "Directory '$LOG_DIR' created."
+fi
+
+# Check if file exists, if not, create it
+if [ ! -f "$LOG_FILE" ]; then
+    touch "$LOG_FILE"
+    echo "File '$LOG_FILE' created."
+fi
 # Create and activate virtual environment if not exists
 if [ ! -d "$VENV_DIR" ]; then
     echo "🐍 Creating a virtual environment..."

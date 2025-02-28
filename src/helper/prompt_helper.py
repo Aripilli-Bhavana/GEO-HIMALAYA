@@ -36,6 +36,7 @@ def get_prompt_template()-> PromptTemplate:
 
         ### Instructions:
         1. Generate SQL queries that **only** use the provided metadata.
+        2. **Table names are case sensitive**
         2. **Restrict** the SQL Query to be performed only within the given Area of Interest.
         3. The Area of Interest geoemtry is provided in WKT format.
         4. **DO NOT** assume any missing table or column.
