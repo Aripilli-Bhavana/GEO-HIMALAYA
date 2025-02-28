@@ -1,5 +1,6 @@
 import re
 import psycopg2
+import psycopg2.extras
 import json
 import os
 from shapely.wkb import loads
@@ -33,17 +34,17 @@ def extract_sql_query(text: str) -> str:
 
 
 
-def run_query(response_from_llm : str, aoi : str) :
-
+def run_query(response_from_llm: str, aoi: str):
     aoi_prefix = f"WITH aoi AS (SELECT ST_GeomFromText('{aoi}', 4326) AS geom)"
     sql_query_from_llm = extract_sql_query(response_from_llm)
-    if(sql_query_from_llm == "FALSE") :
+    if sql_query_from_llm == "FALSE":
         return False, "Sorry couldn't understand your request"
-    else :
-        sql_query = f"{aoi_prefix} {sql_query_from_llm}"
-        conf_path = os.path.join(os.path.dirname(__file__), "..","..","conf", "database.conf")
-        config = read_config(conf_path)
-        connection = None
+
+    sql_query = f"{aoi_prefix} {sql_query_from_llm}"
+    conf_path = os.path.join(os.path.dirname(__file__), "..", "..", "conf", "database.conf")
+    config = read_config(conf_path)
+
+    connection = None
     try:
         connection = psycopg2.connect(
             host=config['SERVER'],
@@ -52,25 +53,26 @@ def run_query(response_from_llm : str, aoi : str) :
             password=config['PASSWORD'],
             database=config['DATABASE']
         )
-        cursor = connection.cursor()
-        
-        # Fetch table names
+        cursor = connection.cursor(cursor_factory=psycopg2.extras.DictCursor)  # Use DictCursor
+
         cursor.execute(sql_query)
         features = []
         for row in cursor.fetchall():
-            geom_wkb = row['geom']  # or row[<column_index>]
+            geom_wkb = row['geom']  # Now it's safe to use column names
             geometry = loads(bytes(geom_wkb))  # Convert WKB to a Shapely geometry
             feature = geojson.Feature(
                 geometry=geojson.loads(geojson.dumps(geometry.__geo_interface__)),  
                 properties={}  # Add additional properties if needed
             )
-        
             features.append(feature)
-            feature_collection = geojson.FeatureCollection(features)
+
+        feature_collection = geojson.FeatureCollection(features)
         return True, feature_collection
+
     except Exception as e:
         print(f"Error: {e}")
-        return False, e
+        return False, str(e)
+
     finally:
         if connection:
             connection.close()
