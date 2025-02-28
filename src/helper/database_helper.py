@@ -2,6 +2,8 @@ import re
 import psycopg2
 import json
 import os
+from shapely.wkb import loads
+import geojson
 
 def read_config(file_path):
     config = {}
@@ -54,9 +56,18 @@ def run_query(response_from_llm : str, aoi : str) :
         
         # Fetch table names
         cursor.execute(sql_query)
-        result = cursor.fetchall()
+        features = []
+        for row in cursor.fetchall():
+            geom_wkb = row['geom']  # or row[<column_index>]
+            geometry = loads(bytes(geom_wkb))  # Convert WKB to a Shapely geometry
+            feature = geojson.Feature(
+                geometry=geojson.loads(geojson.dumps(geometry.__geo_interface__)),  
+                properties={}  # Add additional properties if needed
+            )
         
-        return True, result
+            features.append(feature)
+            feature_collection = geojson.FeatureCollection(features)
+        return True, feature_collection
     except Exception as e:
         print(f"Error: {e}")
         return False, e

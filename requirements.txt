@@ -4,3 +4,5 @@ ollama
 langchain
 langchain_community
 flask-cors
+shapely
+geojson
