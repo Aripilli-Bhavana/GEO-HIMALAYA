@@ -59,7 +59,7 @@ def run_query(response_from_llm: str, aoi: str):
         features = []
         for row in cursor.fetchall():
             geom_wkb = row['geom']  # Now it's safe to use column names
-            geometry = loads(bytes(geom_wkb))  # Convert WKB to a Shapely geometry
+            geometry = loads((geom_wkb))  # Convert WKB to a Shapely geometry
             feature = geojson.Feature(
                 geometry=geojson.loads(geojson.dumps(geometry.__geo_interface__)),  
                 properties={}  # Add additional properties if needed
