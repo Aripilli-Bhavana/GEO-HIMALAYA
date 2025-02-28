@@ -14,8 +14,8 @@ def process_request():
         return jsonify({"error": "Missing 'message' in request"}), 400
     if not data or "aoi" not in data:
         return jsonify({"error": "Missing 'aoi' in request"}), 400
-    
-    logger.log("INFO", f"User Query : {data["message"]}")
+    user_query = data["message"]
+    logger.log("INFO", f"User Query : {user_query}")
     
     llm_response = generate_responses(data["message"]) 
     response = response_helper.get_result_from_db(llm_response, data["aoi"])
