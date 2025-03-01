@@ -107,6 +107,19 @@ def get_prompt_template()-> PromptTemplate:
                             AND ST_DWithin(agri_lands.geom, canals.geom, 500)  -- Within 500m of a canal
                             AND ST_Intersects(canals.geom, aoi.geom)  -- Ensure canals are inside AOI
                         );
+            Question : Find built-up area near water body
+            AOI : aoi
+            Query : SELECT built_ups.lulc_type, built_ups.geom
+                        FROM uttarakhand_lulc AS built_ups
+                        JOIN aoi ON ST_Intersects(built_ups.geom, aoi.geom)  -- Restrict LULC data to AOI
+                        WHERE built_ups.lulc_type LIKE '%Builtup%'  -- Filter for built-up area
+                        AND EXISTS (
+                            SELECT 1 FROM uttarakhand_lulc AS water_bodies
+                            WHERE water_bodies.lulc_type IN ('Water Body', 'Lakes/Ponds', 'Reservoir/tanks', 'Canal', 'Waterlogged / Marshy Land') -- Water body types
+                            AND ST_DWithin(built_ups.geom, water_bodies.geom, 10)  -- Within 10m of water body
+                            AND ST_Intersects(water_bodies.geom, aoi.geom)  -- Ensure water body is inside AOI
+                        );
+
         ---
 
         ### **User Query:**
