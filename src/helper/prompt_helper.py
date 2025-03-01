@@ -38,7 +38,6 @@ def get_prompt_template()-> PromptTemplate:
         1. Generate SQL queries that **only** use the provided metadata.
         2. **Table names are case sensitive**
         3. ** Attributes are case sensitive**
-        4. For wildcard characters and condtional statements select only values given in database schema and those values are case sensitive
         4. **Restrict** the SQL Query to be performed only within the given Area of Interest.
         5. The Area of Interest geoemtry is provided in WKT format.
         6. **DO NOT** assume any missing table or column.
@@ -49,12 +48,12 @@ def get_prompt_template()-> PromptTemplate:
             AOI : aoi
             Query:  SELECT forest.geom
                         FROM uttarakhand_forest AS forest
-                        JOIN aoi ON ST_Intersects(forest.geom, aoi.geom)  -- Restrict forests to AOI
+                        JOIN aoi ON ST_Intersects(forest.geom, aoi.geom)  
                         WHERE EXISTS (
                             SELECT 1 FROM uttarakhand_roads AS roads
-                            WHERE ST_Intersects(forest.geom, roads.geom)  -- Forests that intersect city roads
-                            AND roads.road_type = 'City road'  -- Filter for city roads
-                            AND ST_Intersects(roads.geom, aoi.geom)  -- Ensure roads are inside AOI
+                            WHERE ST_Intersects(forest.geom, roads.geom)  
+                            AND roads.road_type = 'City road'  
+                            AND ST_Intersects(roads.geom, aoi.geom)  
                         );
 
 
@@ -62,18 +61,18 @@ def get_prompt_template()-> PromptTemplate:
             AOI : aoi
             Query: SELECT soil.geom, soil.soil_type
                     FROM uttarakhand_soil AS soil
-                    JOIN aoi ON ST_Intersects(soil.geom, aoi.geom)  -- Restrict soil types to AOI
+                    JOIN aoi ON ST_Intersects(soil.geom, aoi.geom)  
                     WHERE EXISTS (
                         SELECT 1 FROM uttarakhand_drainage AS river
-                        WHERE ST_DWithin(soil.geom, river.geom, 500)  -- Soil types within 500m of rivers
-                        AND ST_Intersects(river.geom, aoi.geom)  -- Ensure rivers are inside AOI
+                        WHERE ST_DWithin(soil.geom, river.geom, 500)  
+                        AND ST_Intersects(river.geom, aoi.geom)  
                     )
                     ORDER BY ST_Distance(soil.geom, (SELECT geom FROM aoi)) ASC;
             Question: Show the longest road and its type
             AOI : aoi
             Query: SELECT roads.road_type, roads.geom, ST_Length(roads.geom::geography) AS length
                     FROM uttarakhand_roads AS roads
-                    JOIN aoi ON ST_Intersects(roads.geom, aoi.geom)  -- Restrict roads to AOI
+                    JOIN aoi ON ST_Intersects(roads.geom, aoi.geom)  
                     ORDER BY length DESC
                     LIMIT 1;
             
@@ -81,33 +80,33 @@ def get_prompt_template()-> PromptTemplate:
             AOI : aoi
             Query : SELECT lulc.lulc_type, lulc.geom, ST_Area(lulc.geom::geography) AS area
                         FROM uttarakhand_lulc AS lulc
-                        JOIN aoi ON ST_Intersects(lulc.geom, aoi.geom)  -- Restrict LULC data to AOI
-                        WHERE lulc.lulc_type IN ('Forest Plantation')  -- Filter for agricultural land
+                        JOIN aoi ON ST_Intersects(lulc.geom, aoi.geom) 
+                        WHERE lulc.lulc_type IN ('Forest Plantation')  
                         ORDER BY area DESC
                         LIMIT 1;
             Question : Show the  barren lands with 10m vicinity of  water body
             AOI : aoi
             Query : SELECT barren_lands.lulc_type, barren_lands.geom
                         FROM uttarakhand_lulc AS barren_lands
-                        JOIN aoi ON ST_Intersects(barren_lands.geom, aoi.geom)  -- Restrict LULC to AOI
-                        WHERE barren_lands.lulc_type IN ('Barren Rocky', 'Gullied / Ravinous land', 'Sandy Area')  -- Barren land types
+                        JOIN aoi ON ST_Intersects(barren_lands.geom, aoi.geom)  
+                        WHERE barren_lands.lulc_type IN ('Barren Rocky', 'Gullied / Ravinous land', 'Sandy Area')  
                         AND EXISTS (
                             SELECT 1 FROM uttarakhand_lulc AS water_bodies
-                            WHERE water_bodies.lulc_type IN ('Water Body', 'Lakes/Ponds', 'Reservoir/tanks', 'Canal', 'Waterlogged / Marshy Land') -- Water body types
-                            AND ST_DWithin(barren_lands.geom, water_bodies.geom, 10)  -- Within 10m of water body
-                            AND ST_Intersects(water_bodies.geom, aoi.geom)  -- Ensure water body is inside AOI
+                            WHERE water_bodies.lulc_type IN ('Water Body', 'Lakes/Ponds', 'Reservoir/tanks', 'Canal', 'Waterlogged / Marshy Land') 
+                            AND ST_DWithin(barren_lands.geom, water_bodies.geom, 10)  
+                            AND ST_Intersects(water_bodies.geom, aoi.geom)  
                         );
              Question : Find built-up area near water body
             AOI : aoi
             Query : SELECT built_ups.lulc_type, built_ups.geom
                         FROM uttarakhand_lulc AS built_ups
-                        JOIN aoi ON ST_Intersects(built_ups.geom, aoi.geom)  -- Restrict LULC data to AOI
-                        WHERE built_ups.lulc_type  ~* 'built[\s_-]*up.*$'  -- Filter for built-up area
+                        JOIN aoi ON ST_Intersects(built_ups.geom, aoi.geom)  
+                        WHERE built_ups.lulc_type  ~* 'built[\s_-]*up.*$'  
                         AND EXISTS (
                             SELECT 1 FROM uttarakhand_lulc AS water_bodies
-                            WHERE water_bodies.lulc_type IN ('Water Body', 'Lakes/Ponds', 'Reservoir/tanks', 'Canal', 'Waterlogged / Marshy Land') -- Water body types
-                            AND ST_DWithin(built_ups.geom, water_bodies.geom, 10)  -- Within 10m of water body
-                            AND ST_Intersects(water_bodies.geom, aoi.geom)  -- Ensure water body is inside AOI
+                            WHERE water_bodies.lulc_type IN ('Water Body', 'Lakes/Ponds', 'Reservoir/tanks', 'Canal', 'Waterlogged / Marshy Land') 
+                            AND ST_DWithin(built_ups.geom, water_bodies.geom, 10)  
+                            AND ST_Intersects(water_bodies.geom, aoi.geom)  
                         );
 
         ---
