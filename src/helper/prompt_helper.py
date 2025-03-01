@@ -114,7 +114,7 @@ def get_prompt_template()-> PromptTemplate:
             Query : SELECT built_ups.lulc_type, built_ups.geom
                         FROM uttarakhand_lulc AS built_ups
                         JOIN aoi ON ST_Intersects(built_ups.geom, aoi.geom)  -- Restrict LULC data to AOI
-                        WHERE built_ups.lulc_type ILIKE '%Builtup%'  -- Filter for built-up area
+                        WHERE built_ups.lulc_type  ~* '^built[\s_-]*up.*$'  -- Filter for built-up area
                         AND EXISTS (
                             SELECT 1 FROM uttarakhand_lulc AS water_bodies
                             WHERE water_bodies.lulc_type IN ('Water Body', 'Lakes/Ponds', 'Reservoir/tanks', 'Canal', 'Waterlogged / Marshy Land') -- Water body types
