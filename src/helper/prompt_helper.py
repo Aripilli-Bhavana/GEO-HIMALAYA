@@ -97,18 +97,6 @@ def get_prompt_template()-> PromptTemplate:
                             AND ST_DWithin(barren_lands.geom, water_bodies.geom, 10)  -- Within 10m of water body
                             AND ST_Intersects(water_bodies.geom, aoi.geom)  -- Ensure water body is inside AOI
                         );
-            Question : Show the  agriculture land  with 500m vicinity of  canal
-            AOI : aoi
-            Query : SELECT agri_lands.lulc_type, agri_lands.geom
-                        FROM uttarakhand_lulc AS agri_lands
-                        JOIN aoi ON ST_Intersects(agri_lands.geom, aoi.geom)  -- Restrict agriculture land to AOI
-                        WHERE agri_lands.lulc_type IN ('Agriculture Crop', 'Agriculture Plantation')  -- Agriculture land types
-                        AND EXISTS (
-                            SELECT 1 FROM uttarakhand_drainage AS canals
-                            WHERE canals.drainage_type IN ('Main canal', 'Branch canal', 'Distributory canal')  -- Select canal types
-                            AND ST_DWithin(agri_lands.geom, canals.geom, 500)  -- Within 500m of a canal
-                            AND ST_Intersects(canals.geom, aoi.geom)  -- Ensure canals are inside AOI
-                        );
              Question : Find built-up area near water body
             AOI : aoi
             Query : SELECT built_ups.lulc_type, built_ups.geom
