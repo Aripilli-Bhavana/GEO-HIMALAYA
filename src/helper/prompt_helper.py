@@ -43,6 +43,7 @@ def get_prompt_template()-> PromptTemplate:
         6. **DO NOT** assume any missing table or column.
         7.  Use **only** available column names.
         8. Ensure the SQL is syntactically correct and optimized for PostGIS.
+        9. Retuern SQL Query **only** , **No explanation required**
 
         ### Examples
             Question: Show Forest area which passes through city roads
@@ -97,7 +98,7 @@ def get_prompt_template()-> PromptTemplate:
                             AND ST_DWithin(barren_lands.geom, water_bodies.geom, 10)  
                             AND ST_Intersects(water_bodies.geom, aoi.geom)  
                         );
-             Question : Find built-up area near water body
+             Question : Find built-up area near drainage
             AOI : aoi
             Query : SELECT built_ups.type, built_ups.geom
                         FROM uttarakhand_lulc AS built_ups
