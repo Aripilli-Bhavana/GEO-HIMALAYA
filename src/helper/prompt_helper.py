@@ -53,14 +53,14 @@ def get_prompt_template()-> PromptTemplate:
                         WHERE EXISTS (
                             SELECT 1 FROM uttarakhand_roads AS roads
                             WHERE ST_Intersects(forest.geom, roads.geom)  
-                            AND roads.road_type = 'City road'  
+                            AND roads.type = 'City road'  
                             AND ST_Intersects(roads.geom, aoi.geom)  
                         );
 
 
             Question: Find all soil types that are located within 500 meters of a river.
             AOI : aoi
-            Query: SELECT soil.geom, soil.soil_type
+            Query: SELECT soil.geom, soil.type
                     FROM uttarakhand_soil AS soil
                     JOIN aoi ON ST_Intersects(soil.geom, aoi.geom)  
                     WHERE EXISTS (
@@ -71,7 +71,7 @@ def get_prompt_template()-> PromptTemplate:
                     ORDER BY ST_Distance(soil.geom, (SELECT geom FROM aoi)) ASC;
             Question: Show the longest road and its type
             AOI : aoi
-            Query: SELECT roads.road_type, roads.geom, ST_Length(roads.geom::geography) AS length
+            Query: SELECT roads.type, roads.geom, ST_Length(roads.geom::geography) AS length
                     FROM uttarakhand_roads AS roads
                     JOIN aoi ON ST_Intersects(roads.geom, aoi.geom)  
                     ORDER BY length DESC
@@ -79,33 +79,33 @@ def get_prompt_template()-> PromptTemplate:
             
             Question : Show largest area of land use as forest
             AOI : aoi
-            Query : SELECT lulc.lulc_type, lulc.geom, ST_Area(lulc.geom::geography) AS area
+            Query : SELECT lulc.type, lulc.geom, ST_Area(lulc.geom::geography) AS area
                         FROM uttarakhand_lulc AS lulc
                         JOIN aoi ON ST_Intersects(lulc.geom, aoi.geom) 
-                        WHERE lulc.lulc_type IN ('Forest Plantation')  
+                        WHERE lulc.type IN ('Forest Plantation')  
                         ORDER BY area DESC
                         LIMIT 1;
             Question : Show the  barren lands with 10m vicinity of  water body
             AOI : aoi
-            Query : SELECT barren_lands.lulc_type, barren_lands.geom
+            Query : SELECT barren_lands.type, barren_lands.geom
                         FROM uttarakhand_lulc AS barren_lands
                         JOIN aoi ON ST_Intersects(barren_lands.geom, aoi.geom)  
-                        WHERE barren_lands.lulc_type IN ('Barren Rocky', 'Gullied / Ravinous land', 'Sandy Area')  
+                        WHERE barren_lands.type IN ('Barren Rocky', 'Gullied / Ravinous land', 'Sandy Area')  
                         AND EXISTS (
                             SELECT 1 FROM uttarakhand_lulc AS water_bodies
-                            WHERE water_bodies.lulc_type IN ('Water Body', 'Lakes/Ponds', 'Reservoir/tanks', 'Canal', 'Waterlogged / Marshy Land') 
+                            WHERE water_bodies.type IN ('Water Body', 'Lakes/Ponds', 'Reservoir/tanks', 'Canal', 'Waterlogged / Marshy Land') 
                             AND ST_DWithin(barren_lands.geom, water_bodies.geom, 10)  
                             AND ST_Intersects(water_bodies.geom, aoi.geom)  
                         );
              Question : Find built-up area near water body
             AOI : aoi
-            Query : SELECT built_ups.lulc_type, built_ups.geom
+            Query : SELECT built_ups.type, built_ups.geom
                         FROM uttarakhand_lulc AS built_ups
                         JOIN aoi ON ST_Intersects(built_ups.geom, aoi.geom)  
-                        WHERE built_ups.lulc_type  ~* 'built[\s_-]*up.*$'  
+                        WHERE built_ups.type  ~* 'built[\s_-]*up.*$'  
                         AND EXISTS (
-                            SELECT 1 FROM uttarakhand_lulc AS water_bodies
-                            WHERE water_bodies.lulc_type IN ('Water Body', 'Lakes/Ponds', 'Reservoir/tanks', 'Canal', 'Waterlogged / Marshy Land') 
+                            SELECT 1 FROM uttarakhand_drainage AS water_bodies
+                            WHERE water_bodies.type IN ('Branch canal', 'River', 'Distributory canal', 'Stream', 'Drain','Main canal') 
                             AND ST_DWithin(built_ups.geom, water_bodies.geom, 10)  
                             AND ST_Intersects(water_bodies.geom, aoi.geom)  
                         );
