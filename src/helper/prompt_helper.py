@@ -83,7 +83,7 @@ def get_prompt_template()-> PromptTemplate:
             Query : SELECT lulc.type, lulc.geom, ST_Area(lulc.geom::geography) AS area
                         FROM uttarakhand_lulc AS lulc
                         JOIN aoi ON ST_Intersects(lulc.geom, aoi.geom) 
-                        WHERE lulc.type IN ('Forest Plantation')  
+                        WHERE lulc.type  ~* 'forest.*$'  
                         ORDER BY area DESC
                         LIMIT 1;
             Question : Show the  barren lands with 10m vicinity of  water body
