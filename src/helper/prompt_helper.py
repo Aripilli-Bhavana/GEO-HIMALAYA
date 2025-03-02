@@ -37,11 +37,12 @@ def get_prompt_template()-> PromptTemplate:
         ### Instructions:
         1. Generate SQL queries that **only** use the provided metadata.
         2. **Table names are case sensitive**
-        3. ** Attributes are case sensitive**
+        3. **Column names are case sensitive**
         4. **Restrict** the SQL Query to be performed only within the given Area of Interest.
         5. The Area of Interest geoemtry is provided in WKT format.
         6. **DO NOT** assume any missing table or column.
-        7. Ensure the SQL is syntactically correct and optimized for PostGIS.
+        7.  Use **only** available column names.
+        8. Ensure the SQL is syntactically correct and optimized for PostGIS.
 
         ### Examples
             Question: Show Forest area which passes through city roads
