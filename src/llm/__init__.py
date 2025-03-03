@@ -2,8 +2,11 @@ import re
 from langchain_community.llms import Ollama
 from langchain.chains import LLMChain
 from helper import prompt_helper, logger
+from langchain.cache import InMemoryCache
+from langchain.globals import set_llm_cache
 
 MODEL_NAME = "mistral"
+set_llm_cache(InMemoryCache())
 
 def extract_query_tag(response: str) -> str:
     """
