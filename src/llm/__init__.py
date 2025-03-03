@@ -15,7 +15,7 @@ def extract_query_tag(response: str) -> str:
 def generate_responses(user_query: str):
     llm = Ollama(model=MODEL_NAME)
     query_chain = LLMChain(llm=llm, prompt=prompt_helper.get_prompt_template())
-    response = response = query_chain.run({"user_query": user_query, "metadata": prompt_helper.get_metadata()})
+    response = query_chain.run({"user_query": user_query, "metadata": prompt_helper.get_metadata()})
     logger.log("INFO", f"LLM Resposne : {response}")
     return response
 

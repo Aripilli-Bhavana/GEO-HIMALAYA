@@ -8,7 +8,6 @@ OLLAMA_MODEL="mistral"
 LOG_DIR="logs"
 LOG_FILE="$LOG_DIR/server.log"
 
-sudo apt update && sudo apt install -y libpq-dev python3-dev build-essential
 
 # Check if Python is installed
 if ! command -v python3 &>/dev/null; then
