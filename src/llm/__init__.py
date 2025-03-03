@@ -13,7 +13,7 @@ def extract_query_tag(response: str) -> str:
     return match.group(1) if match else "No <Query> tag found in the response."
 
 def generate_responses(user_query: str):
-    llm = Ollama(model=MODEL_NAME)
+    llm = Ollama(model=MODEL_NAME, temperature=0,top_p=0, top_k=1)
     query_chain = LLMChain(llm=llm, prompt=prompt_helper.get_prompt_template())
     response = query_chain.run({"user_query": user_query, "metadata": prompt_helper.get_metadata()})
     logger.log("INFO", f"LLM Resposne : {response}")
