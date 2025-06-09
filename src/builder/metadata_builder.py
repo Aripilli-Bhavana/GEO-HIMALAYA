@@ -27,23 +27,32 @@ def get_db_metadata(config):
         
         # Fetch table names
         cursor.execute("""
-            SELECT table_name
-            FROM information_schema.tables
-            WHERE table_schema = 'public';
-        """)
-        tables = cursor.fetchall()
-        
-        db_metadata = {}
-        
-        for (table_name,) in tables:
-            cursor.execute(f"""
-                SELECT column_name
-                FROM information_schema.columns
-                WHERE table_name = '{table_name}';
+            WITH metadata AS (
+        SELECT 
+            c.table_name,
+            c.table_schema,  -- Include table_schema in GROUP BY
+            obj_description((c.table_schema || '.' || c.table_name)::regclass, 'pg_class') AS table_description,
+            jsonb_object_agg(
+                c.column_name, 
+                jsonb_build_object(
+                    'data_type', c.data_type,
+                    'description', col_description((c.table_schema || '.' || c.table_name)::regclass, c.ordinal_position)
+                )
+            ) AS columns
+        FROM information_schema.columns c
+        WHERE c.table_schema = 'public'
+        GROUP BY c.table_name, c.table_schema
+    )
+    SELECT jsonb_object_agg(
+        table_name, 
+        jsonb_build_object(
+            'description', table_description,
+            'columns', columns
+        )
+    ) AS metadata_json
+    FROM metadata;
             """)
-            columns = [col[0] for col in cursor.fetchall()]
-            
-            db_metadata[table_name] = columns
+        db_metadata = cursor.fetchall()
         
         return db_metadata
     except Exception as e:

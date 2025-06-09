@@ -1,39 +1,24 @@
-import ollama
-import os
+import re
+from langchain_community.llms import Ollama
+from langchain.chains import LLMChain
+from helper import prompt_helper, logger
+from langchain.cache import InMemoryCache
+from langchain.globals import set_llm_cache
 
-# Ensure the environment variable is set
-os.environ["OLLAMA_HOST"] = "http://localhost:11434"
-
-# Define the model name
 MODEL_NAME = "mistral"
+set_llm_cache(InMemoryCache())
 
-def generate_responses(prompt: str, num_responses: int = 2):
-    responses = []
-    for _ in range(num_responses):
-        response = ollama.generate(
-            model=MODEL_NAME,
-            prompt=prompt,
-            options={
-                "num_ctx": 4096,
-                "temperature": 0.7,  # Higher temperature for varied responses
-                "top_p": 0.9,
-                "repeat_penalty": 1.2,
-                "num_predict": 256,
-            }
-        )
-        responses.append(response["response"])
-    return responses
+def extract_query_tag(response: str) -> str:
+    """
+    Extracts the SQL query enclosed within the <Query> tags.
+    """
+    match = re.search(r"<Query:\s*(.*?)\s*>", response, re.DOTALL)
+    return match.group(1) if match else "No <Query> tag found in the response."
 
-if __name__ == "__main__":
-    print("Ollama Chatbot (Type 'exit' to quit)")
-    while True:
-        user_input = input("You: ")
-        if user_input.lower() in ["exit", "quit"]:
-            print("Exiting chat...")
-            break
-        
-        responses = generate_responses(user_input)
-        print("\nBot Responses:")
-        for i, resp in enumerate(responses, start=1):
-            print(f"{i}. {resp}\n")
+def generate_responses(user_query: str):
+    llm = Ollama(model=MODEL_NAME, temperature=0,top_p=0, top_k=1)
+    query_chain = LLMChain(llm=llm, prompt=prompt_helper.get_prompt_template())
+    response = query_chain.run({"user_query": user_query, "metadata": prompt_helper.get_metadata()})
+    logger.log("INFO", f"LLM Resposne : {response}")
+    return response
 

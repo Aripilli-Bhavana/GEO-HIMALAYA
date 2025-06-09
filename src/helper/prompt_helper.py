@@ -2,11 +2,11 @@
 
 import json
 import os
+from langchain.prompts import PromptTemplate
 
-def prepare_prompt(message: str) -> str:
+def get_prompt_template()-> PromptTemplate:
     """
-    Reads metadata.json from the metadata directory and prepares a prompt 
-    to answer the question based on metadata only.
+    Reutrns pronpmt template
     """
     metadata_path = os.path.join(os.path.dirname(__file__), "..","..","metadata", "metadata.json")
 
@@ -22,27 +22,130 @@ def prepare_prompt(message: str) -> str:
 
     # Format metadata into a readable context
     metadata_str = json.dumps(metadata, indent=2)
-    print(metadata_str)
     # Construct the prompt
-    prompt = f"""
-    ### SYSTEM MESSAGE :
-    You are a GIS expert with access to geospatial database with following tables. 
-    **Database details :**
-    {metadata_str}
+    prompt_template = PromptTemplate(
+    input_variables=["user_query"],
+    template="""
+        ### SYSTEM MESSAGE:
+        You are a SQL query generation expert with access to a PostGIS-enabled geospatial database. Your task is to generate **accurate and optimized SQL queries** based strictly on the following metadata:
 
-    Use only the provided database details to answer questions related to available data.
-    
+        **Database Schema:**
+        {metadata}
+
+        
+
+        ### Instructions:
+        1. Generate SQL queries that **only** use the provided metadata.
+        2. **Table names are case sensitive**
+        3. **Column names are case sensitive**
+        4. **Restrict** the SQL Query to be performed only within the given Area of Interest.
+        5. The Area of Interest geoemtry is provided in WKT format.
+        6. **DO NOT** assume any missing table or column.
+        7.  Use **only** available column names.
+        8. Ensure the SQL is syntactically correct and optimized for PostGIS.
+        9. Retuern SQL Query **only** , **No explanation required**
+
+        ### Examples
+            Question: Show Forest area which passes through city roads
+            AOI : aoi
+            Query:  SELECT forest.geom
+                        FROM uttarakhand_forest AS forest
+                        JOIN aoi ON ST_Intersects(forest.geom, aoi.geom)  
+                        WHERE EXISTS (
+                            SELECT 1 FROM uttarakhand_roads AS roads
+                            WHERE ST_Intersects(forest.geom, roads.geom)  
+                            AND roads.type = 'City road'  
+                            AND ST_Intersects(roads.geom, aoi.geom)  
+                        );
 
 
-    ### **User Query:**
-    {message}
+            Question: Find all soil types that are located within 500 meters of a river.
+            AOI : aoi
+            Query: SELECT soil.geom, soil.type
+                    FROM uttarakhand_soil AS soil
+                    JOIN aoi ON ST_Intersects(soil.geom, aoi.geom)  
+                    WHERE EXISTS (
+                        SELECT 1 FROM uttarakhand_drainage AS river
+                        WHERE ST_DWithin(soil.geom, river.geom, 500)  
+                        AND ST_Intersects(river.geom, aoi.geom)  
+                    )
+                    ORDER BY ST_Distance(soil.geom, (SELECT geom FROM aoi)) ASC;
+            Question: Show the longest road and its type
+            AOI : aoi
+            Query: SELECT roads.type, roads.geom, ST_Length(roads.geom::geography) AS length
+                    FROM uttarakhand_roads AS roads
+                    JOIN aoi ON ST_Intersects(roads.geom, aoi.geom)  
+                    ORDER BY length DESC
+                    LIMIT 1;
+            
+            Question : Show largest area of land use as forest
+            AOI : aoi
+            Query : SELECT lulc.type, lulc.geom, ST_Area(lulc.geom::geography) AS area
+                        FROM uttarakhand_lulc AS lulc
+                        JOIN aoi ON ST_Intersects(lulc.geom, aoi.geom) 
+                        WHERE lulc.type  ~* 'forest.*$'  
+                        ORDER BY area DESC
+                        LIMIT 1;
+            Question : Show the  barren lands with 10m vicinity of  water body
+            AOI : aoi
+            Query : SELECT barren_lands.type, barren_lands.geom
+                        FROM uttarakhand_lulc AS barren_lands
+                        JOIN aoi ON ST_Intersects(barren_lands.geom, aoi.geom)  
+                        WHERE barren_lands.type IN ('Barren Rocky', 'Gullied / Ravinous land', 'Sandy Area')  
+                        AND EXISTS (
+                            SELECT 1 FROM uttarakhand_lulc AS water_bodies
+                            WHERE water_bodies.type IN ('Water Body', 'Lakes/Ponds', 'Reservoir/tanks', 'Canal', 'Waterlogged / Marshy Land') 
+                            AND ST_DWithin(barren_lands.geom, water_bodies.geom, 10)  
+                            AND ST_Intersects(water_bodies.geom, aoi.geom)  
+                        );
+             Question : Find built-up area near drainage
+            AOI : aoi
+            Query : SELECT built_ups.type, built_ups.geom
+                        FROM uttarakhand_lulc AS built_ups
+                        JOIN aoi ON ST_Intersects(built_ups.geom, aoi.geom)  
+                        WHERE built_ups.type  ~* 'built[\s_-]*up.*$'  
+                        AND EXISTS (
+                            SELECT 1 FROM uttarakhand_drainage AS water_bodies
+                            WHERE water_bodies.type IN ('Branch canal', 'River', 'Distributory canal', 'Stream', 'Drain','Main canal') 
+                            AND ST_DWithin(built_ups.geom, water_bodies.geom, 10)  
+                            AND ST_Intersects(water_bodies.geom, aoi.geom)  
+                        );
 
-    ### **Final Response Rules:**
-    - Ensure **all** required steps have been completed before returning the final answer.
-    - The final answer should be only SQL Query statement
+        ---
 
-    ### **Response (ONLY use the metadata, no assumptions, no extra details):**
+        ### **User Query:**
+        {user_query}
+        AOI : aoi
+
+        ---
+
+        ### **Expected Response Format:**
+        -- SQL Query only
+
+        ---
+
+        ### **Response:**
+        """
+    )
+    return prompt_template
+
+def get_metadata() : 
     """
-    return prompt
+    Reads metadata.json from the metadata directory and returns the same.
+    """
+    metadata_path = os.path.join(os.path.dirname(__file__), "..","..","metadata", "metadata.json")
 
+
+    # Load metadata
+    try:
+        with open(metadata_path, "r", encoding="utf-8") as file:
+            metadata = json.load(file)
+    except FileNotFoundError:
+        return f"Error: Metadata file not found. at {metadata_path}"
+    except json.JSONDecodeError:
+        return "Error: Metadata file is not a valid JSON."
+
+    # Format metadata into a readable context
+    metadata_str = json.dumps(metadata, indent=2)
+    return metadata_str
 
