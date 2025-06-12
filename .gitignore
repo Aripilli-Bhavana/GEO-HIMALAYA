@@ -1,7 +1,9 @@
 models/
-metadata/
+metadata/*
+!metadata/metadata.json
 venv/
 conf/
 __pycache__/
 logs/
-*.conf
+conf/*
+!conf/server.conf
