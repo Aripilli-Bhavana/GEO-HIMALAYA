@@ -1,4 +1,3 @@
-#main.py
 import requests
 import os
 from configparser import ConfigParser
@@ -10,7 +9,7 @@ config.read(os.path.join(os.path.dirname(__file__), "..", "conf", "server.conf")
 
 LLM_HOST = config.get("llm", "host", fallback="localhost")
 LLM_PORT = config.get("llm", "port", fallback="11434")
-LLM_URL = f"http://{config.get('llm', 'host')}:{config.get('llm', 'port')}/api/chat"
+LLM_URL = f"http://{LLM_HOST}:{LLM_PORT}/api/chat"
 
 print("GEO-Him")
 model_choice = "mistral:latest"
@@ -36,46 +35,130 @@ while True:
         print(" Sorry, no data found as per your query.")
         continue
 
-    system_prompt = (
-      "You are a GIS data assistant for Uttarakhand. Follow these STRICT rules:\n"
-    "1. Response format MUST be EXACTLY:\n"
-    "   LLM Response: The <objects> are: <comma-separated values from type column>.\n"
-    " View Operation: SELECT DISTINCT type FROM <correct_table>;\n"
-    "\n"
-    "2. For 'show me <objects>' queries:\n"
-    "   - List ALL distinct values from the 'type' column (or equivalent)\n"
-    "   - Use EXACT values as stored in the database\n"
-    "   - Maintain original capitalization and formatting\n"
-    "\n"
-    "3. Never:\n"
-    "   - Summarize or categorize data\n"
-    "   - Add explanations or interpretations\n"
-    "   - Skip any values from the 'type' column\n"
-    "\n"
-    "4. If no matching data exists, respond EXACTLY:\n"
-    "   LLM Response: No data found for this query.\n"
-    "   View Operation: SELECT * FROM unknown_table;\n"
-    "\n"
-    "5. Example responses REQUIRED:\n"
-    "   For 'show me roads':\n"
-    "   LLM Response: The roads are: Foot path, Village road (Pucca), Cart track, District road, National highway, Village road (Kuchha), City road, State highway.\n"
-    "   View Operation: SELECT DISTINCT type FROM uttarakhand_roads;\n"
-    "\n"
-    "   For 'show me forests':\n"
-    "   LLM Response: The forests are: Forest Evergreen/Semi Evergreen - Dense/Close, Forest Evergreen/Semi Evergreen - Open, Forest - Deciduous (Dry/Moist/Thorn) - Dense/Close, Forest - Forest Blank, Forest - Scrub Forest, Forest - Deciduous (Dry/Moist/Thorn) - Open, Forest - Forest Plantation.\n"
-    "   View Operation: SELECT DISTINCT forest_description FROM uttarakhand_forest;"
-    
-)
-    
+    system_prompt = f"""
+### SYSTEM MESSAGE:
+You are a SQL query generation expert with access to a PostGIS-enabled geospatial database. Your task is to generate accurate SQL queries strictly using the metadata provided.
 
-    final_prompt = f"""{system_prompt}
+### RULES:
+1. Use only table/column names available in metadata.
+2. AOI filtering must always be done using:
+   JOIN aoi ON ST_Intersects(table.geom, aoi.geom)
+3. Output format MUST be:
 
-Context from Uttarakhand Datasets:
+---
+LLM Response: <natural language result summary based on metadata like this - LLM Response: The roads are: Foot path, Village road (Pucca), Cart track, District road, National highway, Village road (Kuchha), City road, State highway.>
+
+
+View Operation:
+<valid SQL query here>
+---
+
+4. If query is invalid or no match found:
+LLM Response: No data found for this query.
+View Operation: SELECT * FROM unknown_table;
+
+5. Never include explanations, assumptions or unused columns.
+
+### Examples:
+
+Query: show me roads
+LLM Response: The roads are: Foot path, Village road (Pucca), Cart track, District road, National highway, Village road (Kuchha), City road, State highway.
+View Operation:
+SELECT DISTINCT type FROM uttarakhand_roads
+JOIN aoi ON ST_Intersects(uttarakhand_roads.geom, aoi.geom);
+
+Query: show forests
+LLM Response: The forests are: Forest Evergreen/Semi Evergreen - Dense/Close, Forest Evergreen/Semi Evergreen - Open, Forest - Deciduous (Dry/Moist/Thorn) - Dense/Close, Forest - Forest Blank, Forest - Scrub Forest, Forest - Deciduous (Dry/Moist/Thorn) - Open, Forest - Forest Plantation.
+View Operation:
+SELECT DISTINCT forest_description FROM uttarakhand_forest
+JOIN aoi ON ST_Intersects(uttarakhand_forest.geom, aoi.geom);
+
+
+Question: Show Forest area which passes through city roads  
+AOI : aoi  
+Query:  
+SELECT forest.geom  
+FROM uttarakhand_forest AS forest  
+JOIN aoi ON ST_Intersects(forest.geom, aoi.geom)  
+WHERE EXISTS (  
+    SELECT 1 FROM uttarakhand_roads AS roads  
+    WHERE ST_Intersects(forest.geom, roads.geom)  
+    AND roads.type = 'City road'  
+    AND ST_Intersects(roads.geom, aoi.geom)  
+);  
+
+Question: Find all soil types that are located within 500 meters of a river.  
+AOI : aoi  
+Query:  
+SELECT soil.geom, soil.type  
+FROM uttarakhand_soil AS soil  
+JOIN aoi ON ST_Intersects(soil.geom, aoi.geom)  
+WHERE EXISTS (  
+    SELECT 1 FROM uttarakhand_drainage AS river  
+    WHERE ST_DWithin(soil.geom, river.geom, 500)  
+    AND ST_Intersects(river.geom, aoi.geom)  
+)  
+ORDER BY ST_Distance(soil.geom, (SELECT geom FROM aoi)) ASC;  
+
+Question: Show the longest road and its type  
+AOI : aoi  
+Query:  
+SELECT roads.type, roads.geom, ST_Length(roads.geom::geography) AS length  
+FROM uttarakhand_roads AS roads  
+JOIN aoi ON ST_Intersects(roads.geom, aoi.geom)  
+ORDER BY length DESC  
+LIMIT 1;  
+
+Question: Show largest area of land use as forest  
+AOI : aoi  
+Query:  
+SELECT lulc.type, lulc.geom, ST_Area(lulc.geom::geography) AS area  
+FROM uttarakhand_lulc AS lulc  
+JOIN aoi ON ST_Intersects(lulc.geom, aoi.geom)  
+WHERE lulc.type  ~* 'forest.*$'  
+ORDER BY area DESC  
+LIMIT 1;  
+
+Question: Show the barren lands within 10m of a water body  
+AOI : aoi  
+Query:  
+SELECT barren_lands.type, barren_lands.geom  
+FROM uttarakhand_lulc AS barren_lands  
+JOIN aoi ON ST_Intersects(barren_lands.geom, aoi.geom)  
+WHERE barren_lands.type IN ('Barren Rocky', 'Gullied / Ravinous land', 'Sandy Area')  
+AND EXISTS (  
+    SELECT 1 FROM uttarakhand_lulc AS water_bodies  
+    WHERE water_bodies.type IN ('Water Body', 'Lakes/Ponds', 'Reservoir/tanks', 'Canal', 'Waterlogged / Marshy Land')  
+    AND ST_DWithin(barren_lands.geom, water_bodies.geom, 10)  
+    AND ST_Intersects(water_bodies.geom, aoi.geom)  
+);  
+
+Question: Find built-up area near drainage  
+AOI : aoi  
+Query:  
+SELECT built_ups.type, built_ups.geom  
+FROM uttarakhand_lulc AS built_ups  
+JOIN aoi ON ST_Intersects(built_ups.geom, aoi.geom)  
+WHERE built_ups.type  ~* 'built[_-]*up.*$'  
+AND EXISTS (  
+    SELECT 1 FROM uttarakhand_drainage AS water_bodies  
+    WHERE water_bodies.type IN ('Branch canal', 'River', 'Distributory canal', 'Stream', 'Drain','Main canal')  
+    AND ST_DWithin(built_ups.geom, water_bodies.geom, 10)  
+    AND ST_Intersects(water_bodies.geom, aoi.geom)  
+);  
+
+---
+
+### CONTEXT FROM METADATA:
 {context}
 
-User Question: {user_query}
+### USER QUERY:
+{user_query}
 
-Answer (based only on the above dataset context):"""
+--- RESPONSE:
+"""
+
+    final_prompt = system_prompt
 
     print("\n--- Prompt sent to LLM ---")
     print(f"Context length: {len(context)} characters")
@@ -86,10 +169,10 @@ Answer (based only on the above dataset context):"""
         response = requests.post(
             LLM_URL,
             json={
-                "model":"mistral:latest",
+                "model": model_choice,
                 "messages": [
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": f"{context}\n\n{user_query}"}
+                    {"role": "system", "content": final_prompt},
+                    {"role": "user", "content": ""}
                 ],
                 "stream": False,
                 "options": {
@@ -98,7 +181,6 @@ Answer (based only on the above dataset context):"""
                     "max_tokens": 500
                 }
             },
-            
         )
 
         if response.status_code == 200:
@@ -115,4 +197,3 @@ Answer (based only on the above dataset context):"""
 
     print("\n")
     print(result)
-    
