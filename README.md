@@ -137,12 +137,7 @@ chmod +x run-native.sh
 
 - [x] AOI-based querying
 - [x] Strict SQL generation with context
-- [x] Ollama model switching
-- [x] GitHub-ready structure
+- [x] Ollama model running
 """
 
-# Write the README.md file
-with open("README.md", "w", encoding="utf-8") as f:
-    f.write(readme_content.strip())
 
-print("✅ README.md generated successfully.")
