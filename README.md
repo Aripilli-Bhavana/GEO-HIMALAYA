@@ -1,6 +1,3 @@
-# readme_generator.py
-
-readme_content = """
 # GEO-HIMALAYA 🌄
 
 GEO-HIMALAYA is a geospatially-aware chatbot assistant tailored for Uttarakhand-based GIS vector datasets. It leverages LangChain + Ollama to answer user queries with intelligent metadata matching and SQL generation for AOI-specific analysis.
